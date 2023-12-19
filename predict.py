@@ -111,13 +111,14 @@ class Predictor(BasePredictor):
 
         if task_name in ["S2ST", "T2ST"]:
             wav = batched.audio_wavs[0]
-            output_path = "/tmp/out.wav"
+            output_path = "out.wav"
             if wav.dtype == torch.float16:
                 wav = wav.to(torch.float32)
 
+            if len(wav.size()) > 2:
+                wav = wav.mean(dim=0)
+                
             wav_numpy = wav.detach().cpu().numpy()
-            if wav_numpy.ndim > 1 and wav_numpy.shape[-1] > 1:
-                wav_numpy = np.mean(wav_numpy, axis=-1)
                 
             torchaudio.save(output_path, torch.from_numpy(wav_numpy), sample_rate=int(AUDIO_SAMPLE_RATE))
             return Output(
