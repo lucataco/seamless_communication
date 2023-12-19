@@ -14,7 +14,7 @@ from lang_list import (
 
 AUDIO_SAMPLE_RATE = 16000.0
 
-class ModelOutput(BaseModel):
+class Output(BaseModel):
     audio_output: Optional[Path]
     text_output: str
 
@@ -67,7 +67,7 @@ class Predictor(BasePredictor):
         max_input_audio_length: float = Input(
             description="Set maximum input audio length.", default=60.0
         ),
-    ) -> ModelOutput:
+    ) -> Output:
         """Run a single prediction on the model"""
         task_name = task_name.split()[0]
         input_data = "/tmp/cog_input_audio.wav"
@@ -111,7 +111,7 @@ class Predictor(BasePredictor):
 
         if task_name in ["S2ST", "T2ST"]:
             wav = batched.audio_wavs[0]
-            output_audio = "/tmp/output.wav"
+            output_path = "/tmp/out.wav"
             if wav.dtype == torch.float16:
                 wav = wav.to(torch.float32)
 
@@ -119,8 +119,8 @@ class Predictor(BasePredictor):
             if wav_numpy.ndim > 1 and wav_numpy.shape[-1] > 1:
                 wav_numpy = np.mean(wav_numpy, axis=-1)
                 
-            torchaudio.save(output_audio, torch.from_numpy(wav_numpy), sample_rate=int(AUDIO_SAMPLE_RATE))
-            return ModelOutput(
-                audio_output=Path(output_audio), text_output=(text_out)
+            torchaudio.save(output_path, torch.from_numpy(wav_numpy), sample_rate=int(AUDIO_SAMPLE_RATE))
+            return Output(
+                audio_output=Path(output_path), text_output=(text_out)
             )
-        return ModelOutput(audio_output=None, text_output=text_out)
+        return Output(audio_output=None, text_output=text_out)
